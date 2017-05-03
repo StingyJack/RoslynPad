@@ -23,7 +23,8 @@ using RoslynPad.Utilities;
 namespace RoslynPad.UI
 {
     using System.Diagnostics;
-    
+    using System.Windows;
+
     [Export]
     public class OpenDocumentViewModel : NotificationObject
     {
@@ -54,6 +55,64 @@ namespace RoslynPad.UI
             }
         }
 
+        enum ResultsFormat
+        {
+            Grid,
+            Text
+        }
+
+        private ResultsFormat _resultsFormat = ResultsFormat.Grid;
+        private string _resultsFormatTypeName = ResultsFormat.Grid.ToString();
+
+        public string ResultsFormatTypeName
+        {
+            get => _resultsFormatTypeName;
+            set
+            {
+                if (_resultsFormatTypeName == value)
+                {
+                    return;
+                }
+                _resultsFormatTypeName = value;
+                OnPropertyChanged();
+            }
+        }
+        
+
+        private Visibility _resultsAsGrid = Visibility.Visible;
+
+        public Visibility ResultsAsGrid
+        {
+            get => _resultsAsGrid;
+            set
+            {
+                if (_resultsAsGrid == value)
+                {
+                    return;
+                }
+                _resultsAsGrid = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private Visibility _resultsAsText = Visibility.Hidden;
+
+        public Visibility ResultsAsText
+        {
+            get => _resultsAsText;
+            set
+            {
+                if (_resultsAsText == value)
+                {
+                    return;
+                }
+                _resultsAsText = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        
+
         public DocumentViewModel Document { get; private set; }
 
         [ImportingConstructor]
@@ -80,7 +139,7 @@ namespace RoslynPad.UI
             CommentSelectionCommand = commands.CreateAsync(() => CommentUncommentSelection(CommentAction.Comment));
             UncommentSelectionCommand = commands.CreateAsync(() => CommentUncommentSelection(CommentAction.Uncomment));
             RenameSymbolCommand = commands.CreateAsync(RenameSymbol);
-
+            ToggleResultsFormatCommand = commands.Create(ToggleResultsFormat);
         }
 
         public void SetDocument(DocumentViewModel document)
@@ -112,6 +171,23 @@ namespace RoslynPad.UI
                 host.UpdateDocument(newDocument);
             }
             OnEditorFocus();
+        }
+
+        private void ToggleResultsFormat()
+        {
+            if (_resultsFormat == ResultsFormat.Text)
+            {
+                _resultsFormat = ResultsFormat.Grid;
+                ResultsAsText = Visibility.Hidden;
+                ResultsAsGrid = Visibility.Visible;
+            }
+            else
+            {
+                _resultsFormat = ResultsFormat.Text;
+                ResultsAsText = Visibility.Visible;
+                ResultsAsGrid = Visibility.Hidden;
+            }
+            SetProperty(ref _resultsFormatTypeName, _resultsFormat.ToString(),nameof(ResultsFormatTypeName));
         }
 
         private enum CommentAction
@@ -331,6 +407,8 @@ namespace RoslynPad.UI
         public IActionCommand UncommentSelectionCommand { get; }
 
         public IActionCommand RenameSymbolCommand { get; }
+
+        public IActionCommand ToggleResultsFormatCommand { get; set; }
 
         public bool IsRunning
         {
